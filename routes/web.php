@@ -1,0 +1,52 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\Auth\PasswordChangeController;
+use App\Http\Controllers\PreinscriptionController;
+
+// Routes publiques de pré-inscription (La racine du site sert le formulaire directement)
+Route::get('/', [PreinscriptionController::class, 'create'])->name('preinscription.create');
+Route::post('/', [PreinscriptionController::class, 'store'])->name('preinscription.store');
+Route::get('/inscription/succes', [PreinscriptionController::class, 'success'])->name('preinscription.success');
+
+use App\Http\Controllers\PaiementController;
+
+// Routes publiques de paiement
+Route::get('/paiement/{token}', [PaiementController::class, 'show'])->name('paiement.show');
+Route::post('/paiement/{token}/payer', [PaiementController::class, 'payer'])->name('paiement.payer');
+Route::get('/paiement/confirmation/{token}', [PaiementController::class, 'success'])->name('paiement.success');
+
+// Webhook FedaPay
+Route::post('/webhook/fedapay', [PaiementController::class, 'webhook'])->name('webhook.fedapay');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified', 'force.password'])->name('dashboard');
+
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/change-password', [PasswordChangeController::class, 'create'])->name('password.change');
+    Route::post('/change-password', [PasswordChangeController::class, 'store'])->name('password.change.store');
+});
+
+use App\Http\Controllers\Academique\InscriptionController as AcademiqueInscriptionController;
+
+// Routes Académique (directeur académique + admin)
+Route::middleware(['auth', 'force.password', 'role:academique|admin'])
+    ->prefix('academique')
+    ->name('academique.')
+    ->group(function () {
+        Route::get('/inscriptions', [AcademiqueInscriptionController::class, 'index'])->name('inscriptions.index');
+        Route::get('/inscriptions/{inscription}', [AcademiqueInscriptionController::class, 'show'])->name('inscriptions.show');
+        Route::patch('/inscriptions/{inscription}/valider', [AcademiqueInscriptionController::class, 'valider'])->name('inscriptions.valider');
+        Route::patch('/inscriptions/{inscription}/rejeter', [AcademiqueInscriptionController::class, 'rejeter'])->name('inscriptions.rejeter');
+    });
+
+require __DIR__.'/auth.php';
