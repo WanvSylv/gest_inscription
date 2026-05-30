@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Academique;
 
 use App\Http\Controllers\Controller;
+use App\Mail\DossierValideEmail;
+use App\Mail\DossierRejeteEmail;
 use App\Models\Inscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class InscriptionController extends Controller
@@ -52,8 +56,16 @@ class InscriptionController extends Controller
             'token_paiement'  => Str::uuid(),
         ]);
 
-        // @todo Send email + SMS notification to student
-        return back()->with('success', 'Dossier validé. Le lien de paiement a été généré (72h).');
+        // Envoyer email de validation avec lien de paiement
+        try {
+            $inscription->load(['etudiant', 'filiere']);
+            Mail::to($inscription->etudiant->email_personnel)
+                ->send(new DossierValideEmail($inscription));
+        } catch (\Exception $e) {
+            Log::error('Erreur envoi mail validation dossier: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Dossier validé et email envoyé à l\'étudiant avec le lien de paiement.');
     }
 
     public function rejeter(Request $request, Inscription $inscription)
@@ -73,7 +85,19 @@ class InscriptionController extends Controller
             'valide_par'  => Auth::id(),
         ]);
 
-        // @todo Send email + SMS notification to student
-        return back()->with('success', 'Dossier rejeté avec succès.');
+        // Envoyer email de rejet
+        try {
+            $inscription->load(['etudiant', 'filiere']);
+            Mail::to($inscription->etudiant->email_personnel)
+                ->send(new DossierRejeteEmail(
+                    $inscription,
+                    $request->motif_rejet,
+                    $request->boolean('autoriser_modif')
+                ));
+        } catch (\Exception $e) {
+            Log::error('Erreur envoi mail rejet dossier: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Dossier rejeté et étudiant notifié par email.');
     }
 }

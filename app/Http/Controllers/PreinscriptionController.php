@@ -2,19 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\DossierRecuEmail;
 use App\Models\Etudiant;
 use App\Models\Filiere;
 use App\Models\Inscription;
 use App\Models\PieceJustificative;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PreinscriptionController extends Controller
 {
     public function create()
     {
+        // Vérifier que l'email a été validé via OTP
+        if (!session('email_verifie')) {
+            return redirect()->route('preinscription.verify-email')
+                ->with('info', 'Veuillez d\'abord vérifier votre adresse email.');
+        }
+
         $filieres = Filiere::where('actif', true)->get();
-        return view('preinscription.create', compact('filieres'));
+        $emailVerifie = session('email_verifie');
+        return view('preinscription.create', compact('filieres', 'emailVerifie'));
     }
 
     public function store(Request $request)
@@ -49,49 +59,66 @@ class PreinscriptionController extends Controller
             'acte_naissance' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
+        $inscriptionSauvee = null;
+        $etudiantSauve = null;
+
         DB::beginTransaction();
         try {
-            // Create Etudiant (temporarily without user_id)
             $etudiant = Etudiant::create($request->only([
-                'prenom', 'nom', 'date_naissance', 'lieu_naissance', 
+                'prenom', 'nom', 'date_naissance', 'lieu_naissance',
                 'nationalite', 'telephone', 'adresse', 'email_personnel'
             ]));
 
-            // Create Inscription record (En Attente)
             $inscription = Inscription::create([
-                'etudiant_id' => $etudiant->id,
-                'filiere_id' => $request->filiere_id,
+                'etudiant_id'    => $etudiant->id,
+                'filiere_id'     => $request->filiere_id,
                 'annee_academique' => $request->annee_academique,
-                'niveau' => $request->niveau_entree,
-                'statut' => 'en_attente'
+                'niveau'         => $request->niveau_entree,
+                'statut'         => 'en_attente',
             ]);
 
-            // Handle File Uploads
             $filesToUpload = [
                 'releve_bac', 'releves_l1', 'releves_l2', 'attestation_licence', 'releves_m1',
                 'photo', 'carte_identite', 'acte_naissance'
             ];
-            
-            foreach($filesToUpload as $fileType) {
+
+            foreach ($filesToUpload as $fileType) {
                 if ($request->hasFile($fileType)) {
                     $path = $request->file($fileType)->store('pieces_justificatives/' . $etudiant->id, 'public');
-                    
                     PieceJustificative::create([
-                        'inscription_id' => $inscription->id,
-                        'type_piece' => $fileType,
-                        'chemin_fichier' => $path,
-                        'statut_verification' => 'en_attente'
+                        'inscription_id'      => $inscription->id,
+                        'type_piece'          => $fileType,
+                        'chemin_fichier'      => $path,
+                        'statut_verification' => 'en_attente',
                     ]);
                 }
             }
 
             DB::commit();
+            $inscriptionSauvee = $inscription;
+            $etudiantSauve     = $etudiant;
 
-            return redirect()->route('preinscription.success')->with('success', 'Votre dossier a été soumis avec succès.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Une erreur est survenue lors de l\'enregistrement de votre dossier: ' . $e->getMessage()]);
+            Log::error('Erreur enregistrement dossier: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => 'Une erreur est survenue : ' . $e->getMessage()]);
         }
+
+        // Vider la session
+        session()->forget('email_verifie');
+
+        // Envoyer les emails — COMPLÈTEMENT ISOLÉ de la transaction DB
+        try {
+            $inscriptionSauvee->load(['etudiant', 'filiere']);
+            Mail::to($etudiantSauve->email_personnel)
+                ->send(new DossierRecuEmail($inscriptionSauvee));
+            Mail::to(env('ADMIN_EMAIL', 'horebacademy@manosphone.com'))
+                ->send(new \App\Mail\NouveauDossierAdminEmail($inscriptionSauvee));
+        } catch (\Throwable $e) {
+            Log::error('Erreur envoi mail dossier reçu: ' . $e->getMessage());
+        }
+
+        return redirect()->route('preinscription.success')->with('success', 'Votre dossier a été soumis avec succès.');
     }
 
     public function success()

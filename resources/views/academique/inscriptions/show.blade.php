@@ -44,7 +44,11 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-gray-900 leading-tight">{{ $inscription->etudiant->full_name }}</h1>
-                        <p class="text-sm text-gray-500 mt-0.5">{{ $inscription->etudiant->email_personnel }}</p>
+                        <a href="mailto:{{ $inscription->etudiant->email_personnel }}"
+                           class="inline-flex items-center gap-1.5 text-sm text-sigan-blue hover:underline mt-0.5 font-medium">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                            {{ $inscription->etudiant->email_personnel }}
+                        </a>
                     </div>
                 </div>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ring-1 ring-inset {{ $statutClasses }}">
@@ -161,12 +165,18 @@
                 <h3 class="font-bold text-green-700 text-sm">Valider le dossier</h3>
             </div>
             <p class="text-xs text-gray-500 leading-relaxed mb-4">Cela génèrera un lien de paiement valable 72 h et notifiera l'étudiant par email.</p>
-            <form method="POST" action="{{ route('academique.inscriptions.valider', $inscription) }}">
+            <form method="POST" action="{{ route('academique.inscriptions.valider', $inscription) }}" id="form-valider">
                 @csrf
                 @method('PATCH')
-                <button type="submit"
-                        onclick="return confirm('Êtes-vous sûr de vouloir valider ce dossier ? Un lien de paiement sera envoyé à l\'étudiant.')"
-                        class="w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
+                <button type="button"
+                        @click="$dispatch('confirm-modal', {
+                            title: 'Valider le dossier',
+                            message: 'Un lien de paiement valable 72h sera envoyé à {{ $inscription->etudiant->email_personnel }}. Cette action est irréversible.',
+                            confirmText: 'Oui, valider',
+                            type: 'success',
+                            formId: 'form-valider'
+                        })"
+                        class="w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     Valider le dossier
                 </button>
@@ -189,7 +199,7 @@
             </button>
 
             <div x-show="open" x-collapse x-cloak class="mt-4 pt-4 border-t border-red-100">
-                <form method="POST" action="{{ route('academique.inscriptions.rejeter', $inscription) }}">
+                <form method="POST" action="{{ route('academique.inscriptions.rejeter', $inscription) }}" id="form-rejeter">
                     @csrf
                     @method('PATCH')
 
@@ -212,8 +222,15 @@
                         </label>
                     </div>
 
-                    <button type="submit"
-                            class="w-full py-2.5 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
+                    <button type="button"
+                            @click="$dispatch('confirm-modal', {
+                                title: 'Rejeter le dossier',
+                                message: 'L\'étudiant sera notifié par email avec le motif saisi. Confirmez-vous ce rejet ?',
+                                confirmText: 'Oui, rejeter',
+                                type: 'danger',
+                                formId: 'form-rejeter'
+                            })"
+                            class="w-full py-2.5 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         Confirmer le rejet
                     </button>

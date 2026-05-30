@@ -6,9 +6,23 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\PreinscriptionController;
 
-// Routes publiques de pré-inscription (La racine du site sert le formulaire directement)
-Route::get('/', [PreinscriptionController::class, 'create'])->name('preinscription.create');
-Route::post('/', [PreinscriptionController::class, 'store'])->name('preinscription.store');
+// Page d'accueil publique
+Route::get('/', function () {
+    return view('home');
+})->name('home');
+
+// Vérification email OTP (avant inscription)
+use App\Http\Controllers\EmailVerificationController;
+
+Route::get('/inscription/verifier-email', [EmailVerificationController::class, 'showEmailForm'])->name('preinscription.verify-email');
+Route::post('/inscription/envoyer-otp', [EmailVerificationController::class, 'sendOtp'])->name('preinscription.send-otp');
+Route::get('/inscription/code', [EmailVerificationController::class, 'showOtpForm'])->name('preinscription.verify-otp-form');
+Route::post('/inscription/verifier-code', [EmailVerificationController::class, 'verifyOtp'])->name('preinscription.verify-otp');
+Route::post('/inscription/renvoyer-code', [EmailVerificationController::class, 'resendOtp'])->name('preinscription.resend-otp');
+
+// Routes publiques de pré-inscription
+Route::get('/inscription', [PreinscriptionController::class, 'create'])->name('preinscription.create');
+Route::post('/inscription', [PreinscriptionController::class, 'store'])->name('preinscription.store');
 Route::get('/inscription/succes', [PreinscriptionController::class, 'success'])->name('preinscription.success');
 
 use App\Http\Controllers\PaiementController;

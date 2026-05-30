@@ -212,7 +212,7 @@
             <div class="left-content">
                 {{-- Logo --}}
                 <div class="brand">
-                    <div class="brand-icon"><span>HA</span></div>
+                    <img src="{{ asset('images/logo.png') }}" alt="HOREB Academy" style="height:48px;width:auto;filter:brightness(0) invert(1);">
                     <span class="brand-name">HOREB <em>academy</em></span>
                 </div>
 
