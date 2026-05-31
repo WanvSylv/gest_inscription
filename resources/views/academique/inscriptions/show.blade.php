@@ -59,7 +59,7 @@
             {{-- Info Fields --}}
             <div class="border-t border-gray-100 px-6 py-5">
                 <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Informations personnelles</p>
-                <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                     <div>
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Date de naissance</p>
                         <p class="text-sm font-semibold text-gray-800">{{ \Carbon\Carbon::parse($inscription->etudiant->date_naissance)->format('d/m/Y') }}</p>
@@ -76,7 +76,7 @@
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Téléphone</p>
                         <p class="text-sm font-semibold text-gray-800">{{ $inscription->etudiant->telephone }}</p>
                     </div>
-                    <div class="lg:col-span-2">
+                    <div class="sm:col-span-2">
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Adresse</p>
                         <p class="text-sm font-semibold text-gray-800">{{ $inscription->etudiant->adresse }}</p>
                     </div>
@@ -157,7 +157,7 @@
 
         @if($inscription->statut === 'en_attente')
         {{-- ───── Validate Card ───── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6" x-data="{ submitting: false }" @submit.window="if($event.target.id === 'form-valider') submitting = true">
             <div class="flex items-center gap-2.5 mb-2">
                 <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg class="w-4.5 h-4.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -169,22 +169,27 @@
                 @csrf
                 @method('PATCH')
                 <button type="button"
-                        @click="$dispatch('confirm-modal', {
+                        :disabled="submitting"
+                        @click="if(!submitting) $dispatch('confirm-modal', {
                             title: 'Valider le dossier',
                             message: 'Un lien de paiement valable 72h sera envoyé à {{ $inscription->etudiant->email_personnel }}. Cette action est irréversible.',
                             confirmText: 'Oui, valider',
                             type: 'success',
                             formId: 'form-valider'
                         })"
-                        class="w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Valider le dossier
+                        class="w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <svg x-show="submitting" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" x-cloak>
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="submitting ? 'Validation en cours...' : 'Valider le dossier'"></span>
                 </button>
             </form>
         </div>
 
         {{-- ───── Reject Card ───── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-red-200 p-6" x-data="{ open: false }">
+        <div class="bg-white rounded-xl shadow-sm border border-red-200 p-6" x-data="{ open: false, submitting: false }" @submit.window="if($event.target.id === 'form-rejeter') submitting = true">
             <div class="flex items-center gap-2.5 mb-2">
                 <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg class="w-4.5 h-4.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -193,7 +198,8 @@
             </div>
 
             <button @click="open = !open"
-                    class="w-full py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-bold rounded-lg hover:bg-red-100 active:bg-red-200 transition-colors flex items-center justify-center gap-2">
+                    :disabled="submitting"
+                    class="w-full py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-bold rounded-lg hover:bg-red-100 active:bg-red-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 <span x-text="open ? 'Masquer le formulaire' : 'Rejeter ce dossier'"></span>
             </button>
@@ -208,14 +214,16 @@
                             Motif du rejet <span class="text-red-500">*</span>
                         </label>
                         <textarea name="motif_rejet" id="motif_rejet" rows="4" required
-                                  class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-sigan-blue focus:border-sigan-blue transition-colors outline-none resize-none"
+                                  :disabled="submitting"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-sigan-blue focus:border-sigan-blue transition-colors outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                                   placeholder="Expliquez clairement le motif du rejet pour permettre à l'étudiant de comprendre la décision..."></textarea>
                     </div>
 
                     <div class="mb-4">
                         <label class="flex items-start gap-2.5 cursor-pointer group">
                             <input type="checkbox" name="autoriser_modif" value="1"
-                                   class="mt-0.5 rounded border-gray-300 text-sigan-blue focus:ring-sigan-blue transition-colors">
+                                   :disabled="submitting"
+                                   class="mt-0.5 rounded border-gray-300 text-sigan-blue focus:ring-sigan-blue transition-colors disabled:opacity-50">
                             <span class="text-xs text-gray-600 font-medium leading-relaxed group-hover:text-gray-800 transition-colors">
                                 Autoriser l'étudiant à modifier et resoumettre son dossier
                             </span>
@@ -223,16 +231,21 @@
                     </div>
 
                     <button type="button"
-                            @click="$dispatch('confirm-modal', {
+                            :disabled="submitting"
+                            @click="if(!submitting) $dispatch('confirm-modal', {
                                 title: 'Rejeter le dossier',
                                 message: 'L\'étudiant sera notifié par email avec le motif saisi. Confirmez-vous ce rejet ?',
                                 confirmText: 'Oui, rejeter',
                                 type: 'danger',
                                 formId: 'form-rejeter'
                             })"
-                            class="w-full py-2.5 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        Confirmer le rejet
+                            class="w-full py-2.5 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <svg x-show="submitting" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" x-cloak>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="submitting ? 'Rejet en cours...' : 'Confirmer le rejet'"></span>
                     </button>
                 </form>
             </div>

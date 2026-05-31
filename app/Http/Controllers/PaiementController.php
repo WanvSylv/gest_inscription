@@ -18,8 +18,8 @@ class PaiementController extends Controller
 {
     public function __construct()
     {
-        FedaPay::setApiKey(config('fedapay.secret_key', env('FEDAPAY_SECRET_KEY')));
-        FedaPay::setEnvironment(env('FEDAPAY_SANDBOX', true) ? 'sandbox' : 'live');
+        FedaPay::setApiKey(config('fedapay.secret_key'));
+        FedaPay::setEnvironment(config('fedapay.sandbox') ? 'sandbox' : 'live');
     }
 
     public function show($token)
@@ -55,7 +55,7 @@ class PaiementController extends Controller
         try {
             $transaction = Transaction::create([
                 "description" => "Paiement des frais de validation d'inscription - HOREB ACADEMY",
-                "amount" => $inscription->frais_validation ?? $inscription->filiere->frais_inscription,
+                "amount" => (int) $inscription->filiere->frais_inscription,
                 "currency" => ["iso" => "XOF"],
                 "callback_url" => route('paiement.success', ['token' => $token]),
                 "customer" => [
@@ -78,7 +78,18 @@ class PaiementController extends Controller
             return redirect($payToken->url);
         } catch (\Exception $e) {
             Log::error('FedaPay Transaction Error: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de l\'initialisation du paiement.');
+            
+            $detail = $e->getMessage();
+            if ($e instanceof \FedaPay\Error\Base && $e->getErrorMessage()) {
+                $detail = $e->getErrorMessage();
+                if ($e->getErrors()) {
+                    $detail .= ' (' . implode(', ', array_map(function($k, $v) {
+                        return $k . ': ' . (is_array($v) ? implode(', ', $v) : $v);
+                    }, array_keys($e->getErrors()), $e->getErrors())) . ')';
+                }
+            }
+
+            return back()->with('error', 'Une erreur est survenue lors de l\'initialisation du paiement : ' . $detail);
         }
     }
 

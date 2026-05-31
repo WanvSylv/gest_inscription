@@ -45,7 +45,7 @@ $dotColors = [
     </div>
 
     {{-- KPI cards (même design que le dashboard) --}}
-    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
         <a href="{{ route('academique.inscriptions.index', ['statut' => 'en_attente']) }}"
            class="bg-white rounded-2xl border {{ $statut === 'en_attente' ? 'border-sigan-blue ring-2 ring-sigan-blue/20' : 'border-amber-100' }} p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
@@ -127,7 +127,7 @@ $dotColors = [
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
         {{-- Onglets filtre --}}
-        <div class="flex items-center gap-1.5 px-5 py-3.5 border-b border-gray-100 overflow-x-auto">
+        <div class="flex items-center gap-1.5 px-5 py-3.5 border-b border-gray-100 overflow-x-auto flex-nowrap scrollbar-none">
             @foreach($tabs as $key => $tab)
             <a href="{{ route('academique.inscriptions.index', ['statut' => $key]) }}"
                class="whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150

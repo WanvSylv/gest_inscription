@@ -103,7 +103,7 @@
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-3 text-sm">
                             <span class="text-gray-500">Frais de validation d'inscription</span>
-                            <span class="font-semibold text-gray-800">{{ number_format($inscription->frais_validation ?? 0, 0, ',', ' ') }} XOF</span>
+                            <span class="font-semibold text-gray-800">{{ number_format($inscription->filiere->frais_inscription, 0, ',', ' ') }} XOF</span>
                         </div>
                         <div class="flex items-center justify-between mb-5 text-sm">
                             <span class="text-gray-500">Frais de dossier</span>
@@ -111,7 +111,7 @@
                         </div>
                         <div class="border-t border-gray-100 pt-4 flex items-center justify-between">
                             <span class="text-sm font-bold text-gray-900">Total à payer</span>
-                            <span class="text-2xl font-black text-sigan-blue">{{ number_format($inscription->filiere->frais_inscription ?? 0, 0, ',', ' ') }}<span class="text-sm font-medium text-gray-400 ml-1">XOF</span></span>
+                            <span class="text-2xl font-black text-sigan-blue">{{ number_format($inscription->filiere->frais_inscription, 0, ',', ' ') }}<span class="text-sm font-medium text-gray-400 ml-1">XOF</span></span>
                         </div>
                     </div>
                 </div>

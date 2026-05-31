@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
 });
 
 use App\Http\Controllers\Academique\InscriptionController as AcademiqueInscriptionController;
+use App\Http\Controllers\Academique\FiliereController as AcademiqueFiliereController;
 
 // Routes Académique (directeur académique + admin)
 Route::middleware(['auth', 'force.password', 'role:academique|admin'])
@@ -61,6 +62,21 @@ Route::middleware(['auth', 'force.password', 'role:academique|admin'])
         Route::get('/inscriptions/{inscription}', [AcademiqueInscriptionController::class, 'show'])->name('inscriptions.show');
         Route::patch('/inscriptions/{inscription}/valider', [AcademiqueInscriptionController::class, 'valider'])->name('inscriptions.valider');
         Route::patch('/inscriptions/{inscription}/rejeter', [AcademiqueInscriptionController::class, 'rejeter'])->name('inscriptions.rejeter');
+        
+        // Gestion des Filières
+        Route::resource('filieres', AcademiqueFiliereController::class)->except(['show']);
+    });
+
+use App\Http\Controllers\Comptable\PaiementController as ComptablePaiementController;
+
+// Routes Comptabilité (comptable + admin)
+Route::middleware(['auth', 'force.password', 'role:comptable|admin'])
+    ->prefix('comptabilite')
+    ->name('comptable.')
+    ->group(function () {
+        Route::get('/paiements', [ComptablePaiementController::class, 'index'])->name('paiements.index');
+        Route::get('/paiements/{paiement}', [ComptablePaiementController::class, 'show'])->name('paiements.show');
+        Route::get('/paiements/{paiement}/recu', [ComptablePaiementController::class, 'telechargerRecu'])->name('paiements.recu');
     });
 
 require __DIR__.'/auth.php';

@@ -204,7 +204,7 @@
                         </div>
                     </div>
                     <label class="flex items-start gap-3 cursor-pointer group">
-                        <input type="checkbox" id="cgu" required class="mt-0.5 w-5 h-5 rounded border-gray-300 text-sigan-blue focus:ring-sigan-blue flex-shrink-0">
+                        <input type="checkbox" id="cgu" x-model="cguChecked" required class="mt-0.5 w-5 h-5 rounded border-gray-300 text-sigan-blue focus:ring-sigan-blue flex-shrink-0">
                         <span class="text-sm text-gray-600 font-medium leading-relaxed select-none">
                             Je certifie l'exactitude de mes informations et j'accepte les
                             <a href="#" class="text-sigan-blue font-bold hover:underline">conditions générales d'inscription</a> de HOREB ACADEMY.
@@ -214,8 +214,8 @@
 
                 {{-- Boutons --}}
                 <div class="flex items-center justify-between px-8 lg:px-10 py-5 bg-gray-50 border-t border-gray-100">
-                    <button type="button" x-show="step > 1" @click="prevStep()"
-                            class="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all">
+                    <button type="button" x-show="step > 1" @click="prevStep()" :disabled="submitting"
+                            class="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
                         Précédent
                     </button>
@@ -228,9 +228,15 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
                         </button>
                         <button type="submit" x-show="step === 5"
-                                class="flex items-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-6 py-2.5 rounded-xl shadow-sm transition-all active:scale-95">
-                            Soumettre mon dossier
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                                :disabled="!cguChecked || submitting"
+                                :class="(!cguChecked || submitting) ? 'opacity-50 cursor-not-allowed bg-emerald-600' : 'bg-emerald-600 hover:bg-emerald-700'"
+                                class="flex items-center gap-2 text-sm font-bold text-white px-6 py-2.5 rounded-xl shadow-sm transition-all active:scale-95">
+                            <svg x-show="submitting" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" x-cloak>
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="submitting ? 'Soumission du dossier...' : 'Soumettre mon dossier'"></span>
+                            <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
                         </button>
                     </div>
                 </div>
@@ -248,6 +254,8 @@
             step: 1,
             niveau_entree: '{{ old("niveau_entree", "L1") }}',
             dernier_diplome: '{{ old("dernier_diplome", "BAC") }}',
+            cguChecked: false,
+            submitting: false,
             nextStep() {
                 if (this.validateStep(this.step)) {
                     if (this.step < 5) { this.step++; window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -290,7 +298,9 @@
                     if (!this.validateStep(s)) { e.preventDefault(); alert('Des erreurs persistent dans votre formulaire.'); return; }
                 }
                 const cgu = document.getElementById('cgu');
-                if (cgu && !cgu.checked) { e.preventDefault(); alert("Veuillez accepter les conditions d'inscription."); }
+                if (cgu && !cgu.checked) { e.preventDefault(); alert("Veuillez accepter les conditions d'inscription."); return; }
+                
+                this.submitting = true;
             },
         }));
     });
