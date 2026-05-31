@@ -54,8 +54,8 @@ class PaiementController extends Controller
 
         try {
             $transaction = Transaction::create([
-                "description" => "Paiement de scolarité - HOREB ACADEMY",
-                "amount" => $inscription->filiere->frais_inscription,
+                "description" => "Paiement des frais de validation d'inscription - HOREB ACADEMY",
+                "amount" => $inscription->frais_validation ?? $inscription->filiere->frais_inscription,
                 "currency" => ["iso" => "XOF"],
                 "callback_url" => route('paiement.success', ['token' => $token]),
                 "customer" => [

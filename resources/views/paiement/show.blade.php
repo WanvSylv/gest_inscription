@@ -8,7 +8,7 @@
     <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1a56db 100%);" class="py-10">
         <div class="max-w-6xl mx-auto px-6">
             <p class="text-blue-200/70 text-xs font-semibold uppercase tracking-widest mb-2">Finalisation de l'inscription</p>
-            <h1 class="text-2xl lg:text-3xl font-black text-white">Paiement des frais de scolarité</h1>
+            <h1 class="text-2xl lg:text-3xl font-black text-white">Paiement des frais de validation d'inscription</h1>
             <p class="text-blue-100/60 text-sm mt-1">Complétez votre paiement pour confirmer votre inscription à HOREB ACADEMY.</p>
         </div>
     </div>
@@ -102,8 +102,8 @@
                     </div>
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-3 text-sm">
-                            <span class="text-gray-500">Frais de scolarité</span>
-                            <span class="font-semibold text-gray-800">{{ number_format($inscription->filiere->frais_inscription ?? 0, 0, ',', ' ') }} XOF</span>
+                            <span class="text-gray-500">Frais de validation d'inscription</span>
+                            <span class="font-semibold text-gray-800">{{ number_format($inscription->frais_validation ?? 0, 0, ',', ' ') }} XOF</span>
                         </div>
                         <div class="flex items-center justify-between mb-5 text-sm">
                             <span class="text-gray-500">Frais de dossier</span>

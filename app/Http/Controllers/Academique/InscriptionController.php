@@ -54,6 +54,7 @@ class InscriptionController extends Controller
             'valide_par'      => Auth::id(),
             'limite_paiement' => now()->addHours(72),
             'token_paiement'  => Str::uuid(),
+            'frais_validation' => $inscription->filiere->frais_inscription,
         ]);
 
         // Envoyer email de validation avec lien de paiement
