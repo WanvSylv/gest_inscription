@@ -93,9 +93,45 @@ class PaiementController extends Controller
         }
     }
 
-    public function success($token)
+    public function success(Request $request, $token)
     {
-        $inscription = Inscription::where('token_paiement', $token)->firstOrFail();
+        $inscription = Inscription::with(['etudiant', 'filiere'])
+            ->where('token_paiement', $token)
+            ->firstOrFail();
+
+        // Si déjà inscrit → succès confirmé
+        if ($inscription->statut === 'inscrit') {
+            $paiement = $inscription->paiements()->latest()->first();
+            return view('paiement.success', compact('inscription', 'paiement'));
+        }
+
+        // FedaPay transmet l'id de transaction via query string
+        $transactionId = $request->query('id');
+
+        if ($transactionId) {
+            try {
+                $transaction = Transaction::retrieve($transactionId);
+
+                if ($transaction->status === 'approved') {
+                    // Le webhook va confirmer, on affiche succès
+                    return view('paiement.success', compact('inscription'));
+                }
+
+                if (in_array($transaction->status, ['declined', 'cancelled'])) {
+                    return redirect()->route('paiement.show', ['token' => $token])
+                        ->with('error', 'Paiement ' . ($transaction->status === 'cancelled' ? 'annulé' : 'refusé') . '. Veuillez réessayer.');
+                }
+
+            } catch (\Exception $e) {
+                Log::error('FedaPay retrieve error: ' . $e->getMessage());
+            }
+        }
+
+        // Pas encore traité → retour vers la page paiement
+        if ($inscription->statut === 'valide_academique') {
+            return redirect()->route('paiement.show', ['token' => $token])
+                ->with('info', 'Votre paiement est en cours de traitement. Vous recevrez une confirmation par email.');
+        }
 
         return view('paiement.success', compact('inscription'));
     }
