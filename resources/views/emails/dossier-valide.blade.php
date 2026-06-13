@@ -43,7 +43,7 @@
                             <tr><td style="color:#6b7280;font-size:13px;width:40%;">Filière</td><td style="color:#111827;font-size:13px;font-weight:600;">{{ $inscription->filiere->nom }}</td></tr>
                             <tr><td style="color:#6b7280;font-size:13px;">Niveau</td><td style="color:#111827;font-size:13px;font-weight:600;">{{ $inscription->niveau }}</td></tr>
                             <tr><td style="color:#6b7280;font-size:13px;">Année académique</td><td style="color:#111827;font-size:13px;font-weight:600;">{{ $inscription->annee_academique }}</td></tr>
-                            <tr><td style="color:#6b7280;font-size:13px;">Frais de scolarité</td><td style="color:#1a56db;font-size:13px;font-weight:700;">{{ number_format($inscription->filiere->montant_scolarite, 0, ',', ' ') }} XOF</td></tr>
+                            <tr><td style="color:#6b7280;font-size:13px;">Frais de scolarité</td><td style="color:#1a56db;font-size:13px;font-weight:700;">{{ number_format($inscription->filiere->frais_inscription, 0, ',', ' ') }} XOF</td></tr>
                         </table>
                     </div>
 

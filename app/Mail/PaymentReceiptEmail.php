@@ -47,7 +47,7 @@ class PaymentReceiptEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.receipt',
+            view: 'emails.receipt',
             with: [
                 'user' => $this->user,
                 'password' => $this->plainPassword,

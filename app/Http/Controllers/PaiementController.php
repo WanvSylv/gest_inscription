@@ -113,8 +113,67 @@ class PaiementController extends Controller
                 $transaction = Transaction::retrieve($transactionId);
 
                 if ($transaction->status === 'approved') {
-                    // Le webhook va confirmer, on affiche succès
-                    return view('paiement.success', compact('inscription'));
+                    // Traiter le paiement ici (fallback si le webhook n'a pas encore tiré)
+                    $existingPaiement = Paiement::where('transaction_id', $transactionId)->first();
+
+                    if (!$existingPaiement) {
+                        DB::beginTransaction();
+                        try {
+                            $paiementDb = Paiement::create([
+                                'inscription_id' => $inscription->id,
+                                'etudiant_id'    => $inscription->etudiant_id,
+                                'transaction_id' => $transactionId,
+                                'montant'        => $transaction->amount,
+                                'devise'         => 'XOF',
+                                'statut'         => 'approved',
+                                'methode'        => $transaction->mode ?? 'mobile_money',
+                                'paye_le'        => \Carbon\Carbon::parse($transaction->approved_at ?? now()),
+                            ]);
+
+                            $inscription->statut = 'inscrit';
+                            $inscription->save();
+
+                            if (!$inscription->etudiant->user_id) {
+                                $user = app(\App\Services\UserCreationService::class)->createStudentUser($inscription->etudiant);
+                                $inscription->load('etudiant');
+                            } else {
+                                $user = $inscription->etudiant->user;
+                                $user->plainPassword = 'Non applicable (Compte existant)';
+                            }
+
+                            // PDF reçu
+                            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.recu', [
+                                'inscription' => $inscription,
+                                'paiement'    => $paiementDb,
+                            ]);
+                            $pdfContent = $pdf->output();
+                            $pdfName    = 'Recu_Paiement_' . $inscription->etudiant->matricule . '.pdf';
+                            $pdfPath    = 'recus/' . $pdfName;
+                            \Illuminate\Support\Facades\Storage::disk('public')->put($pdfPath, $pdfContent);
+                            $paiementDb->recu_chemin = $pdfPath;
+                            $paiementDb->save();
+
+                            DB::commit();
+
+                            // Email identifiants + reçu (hors transaction)
+                            try {
+                                \Illuminate\Support\Facades\Mail::to($user->email)
+                                    ->send(new \App\Mail\PaymentReceiptEmail($user, $user->plainPassword, $pdfContent, $pdfName));
+                            } catch (\Throwable $e) {
+                                Log::error('Email identifiants non envoyé: ' . $e->getMessage());
+                            }
+
+                            $existingPaiement = $paiementDb;
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            Log::error('Erreur traitement paiement success: ' . $e->getMessage());
+                        }
+                    }
+
+                    // Recharger l'inscription (statut peut avoir changé)
+                    $inscription->refresh();
+                    $paiement = $existingPaiement ?? $inscription->paiements()->latest()->first();
+                    return view('paiement.success', compact('inscription', 'paiement'));
                 }
 
                 if (in_array($transaction->status, ['declined', 'cancelled'])) {
