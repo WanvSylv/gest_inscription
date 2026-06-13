@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\PreinscriptionController;
+use Illuminate\Support\Facades\Auth;
 
 // Page d'accueil publique
 Route::get('/', function () {
@@ -36,8 +37,21 @@ Route::get('/paiement/confirmation/{token}', [PaiementController::class, 'succes
 Route::post('/webhook/fedapay', [PaiementController::class, 'webhook'])->name('webhook.fedapay');
 
 Route::get('/dashboard', function () {
+    if (Auth::user()->hasRole('etudiant')) {
+        return redirect()->route('etudiant.dashboard');
+    }
     return view('dashboard');
 })->middleware(['auth', 'verified', 'force.password'])->name('dashboard');
+
+// Espace étudiant
+use App\Http\Controllers\Etudiant\DashboardController as EtudiantDashboardController;
+
+Route::middleware(['auth', 'force.password', 'role:etudiant'])
+    ->prefix('mon-espace')
+    ->name('etudiant.')
+    ->group(function () {
+        Route::get('/', [EtudiantDashboardController::class, 'index'])->name('dashboard');
+    });
 
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

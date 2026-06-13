@@ -53,7 +53,7 @@
                     </div>
 
                     <div style="text-align:center;margin-bottom:16px;">
-                        <a href="{{ route('login') }}"
+                        <a href="{{ route('etudiant.dashboard') }}"
                            style="display:inline-block;background:#1a56db;color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px;">
                             Accéder à mon portail étudiant →
                         </a>
