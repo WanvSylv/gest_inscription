@@ -70,11 +70,15 @@ class PreinscriptionController extends Controller
             ]));
 
             $inscription = Inscription::create([
-                'etudiant_id'    => $etudiant->id,
-                'filiere_id'     => $request->filiere_id,
-                'annee_academique' => $request->annee_academique,
-                'niveau'         => $request->niveau_entree,
-                'statut'         => 'en_attente',
+                'etudiant_id'          => $etudiant->id,
+                'filiere_id'           => $request->filiere_id,
+                'annee_academique'     => $request->annee_academique,
+                'niveau'               => $request->niveau_entree,
+                'statut'               => 'en_attente',
+                'dernier_diplome'      => $request->dernier_diplome,
+                'annee_diplome'        => $request->annee_diplome,
+                'etablissement_diplome' => $request->etablissement_diplome,
+                'specialite_diplome'   => $request->specialite_diplome,
             ]);
 
             $filesToUpload = [

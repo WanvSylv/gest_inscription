@@ -116,6 +116,31 @@
             @endif
         </div>
 
+        {{-- ───── Parcours académique ───── --}}
+        @if($inscription->dernier_diplome)
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Parcours académique antérieur</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Dernier diplôme obtenu</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ $inscription->dernier_diplome }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Année d'obtention</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ $inscription->annee_diplome }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Établissement</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ $inscription->etablissement_diplome }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Spécialité</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ $inscription->specialite_diplome }}</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- ───── Pièces Justificatives Card ───── --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Pièces justificatives</p>

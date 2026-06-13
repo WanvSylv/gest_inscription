@@ -10,7 +10,8 @@ class Inscription extends Model
         'etudiant_id', 'filiere_id', 'annee_academique', 'niveau',
         'statut', 'motif_rejet', 'date_validation', 'valide_par',
         'limite_paiement', 'token_paiement', 'etablissement_id',
-        'nombre_resoumissions',
+        'nombre_resoumissions', 'frais_validation',
+        'dernier_diplome', 'annee_diplome', 'etablissement_diplome', 'specialite_diplome',
     ];
 
     protected $casts = [
